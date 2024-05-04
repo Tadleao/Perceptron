@@ -21,6 +21,7 @@ namespace Perceptron
             this.entradas = entradas;
             this.tda = tda;
             this.bias = bias;
+            //Geração de pesos aleatórios
             Random rd = new Random(Guid.NewGuid().GetHashCode());
             for( int i = 0; i < pesos.Length; i++ ) {
                 pesos[i] = rd.NextDouble();
@@ -28,6 +29,7 @@ namespace Perceptron
             }
             bits[entradas] = bias;
         }
+        //Setar pesos
         public void setPesos(double[] np) {
             pesos = np;
         }
@@ -47,51 +49,26 @@ namespace Perceptron
             binario[entradas] = bias;
             return binario;
         }
-        public void NetTrain(int[] tt) {
-            int qtde = (int)(Math.Pow(2, entradas)*epocas);
-            int var = (int)Math.Pow(2, entradas);
+        //Efetuar soma do neurônio baseado na entrada
+        double somarBits() {
             double soma = 0.0;
-            int[] saida = new int[var];
-            bool erro = true;
-            int i = 0;
-            for(i = 0; i < qtde; i++)///while(erro)
-            { 
-                    bits = toBin(i % var);
-                    for (int j = 0; j < bits.Length; j++)
-                    {
-                        soma += pesos[j] * bits[j];
-                    }
-                    if (soma > 0) { saida[i % var] = 1; } else { saida[i % var] = 0; }
-                    if (saida[i % var] != tt[i % var])
-                    {
-                        for (int k = 0; k < pesos.Length; k++)
-                        {
-                            pesos[k] = pesos[k] + (tda * (tt[i % var] - saida[i % var]) * bits[k]);
-                            ///Console.WriteLine("Alterado");
-                        }
-                    }
-                erro = (tt.SequenceEqual(saida) && i % var == 0) ? false : true;
-               /// i++;
-                ///Console.WriteLine(i);
-            }
-        }
-        double somar(int[] bin) {
-            double soma = 0.0;
-            for (int i = 0; i < bin.Length; i++) {
-                soma += pesos[i] * bin[i];
+            for (int i = 0; i < bits.Length; i++) {
+                soma += pesos[i] * bits[i];
             }
             return soma;
         }
+        //Verificar a saída (Classificacao do neuronio)
         int verify(double soma) {
             return (soma > 0 ? 1 : 0);
         }
+        //Treino recursivo portas logicas ate aprender
         public void rec_train(int[] tt) {
             bool erro = false;
             int saida = 0;
             int var = tt.Length;
             for (int i = 0; i < tt.Length; i++) {
                 bits = toBin(i);
-                saida = verify(somar(bits));
+                saida = verify(somarBits());
                 if (saida != tt[i]) {
                     erro = true;
                     for (int k = 0; k < pesos.Length; k++)
@@ -102,6 +79,7 @@ namespace Perceptron
             }
             if (erro) { rec_train(tt);}
         }
+        //Treino iterativo portas logicas ate aprender
         public void i_train(int[] tt) {
             bool erro = false;
             int saida = 0;
@@ -111,7 +89,7 @@ namespace Perceptron
                 erro = false;
                 for (int i = 0; i < tt.Length; i++) {
                     bits = toBin(i);
-                    saida = verify(somar(bits));
+                    saida = verify(somarBits());
                     if (saida != tt[i]) {
                         erro = true;
                         for (int k = 0; k < pesos.Length; k++)
@@ -123,16 +101,19 @@ namespace Perceptron
                 }
             } while (erro == true);
         }
+        //Treino iterativo portas logicas por epocas
         public void i_train_epoch(int[] tt)
         {
-            int qtde = (int)(Math.Pow(2, entradas) * epocas);
+            int qtde = (int)(Math.Pow(2, entradas) * epocas); //Iteracoes do for para portas logicas
             int saida = 0;
             int var = tt.Length;
             double soma = 0.0;
                 for (int i = 0; i < qtde; i++)
                 {
+                //Geracao do dataset para portas logicas
                 bits = toBin(i % var);
-                soma = somar(bits);
+                //Verificacao da saida e ajuste dos pesos
+                soma = somarBits();
                 saida = verify(soma);
                     if (saida != tt[i%var])
                     {
@@ -143,6 +124,37 @@ namespace Perceptron
                         }
                     }
                 }
+        }
+        double somar(int[] amostra) {
+            double soma = 0.0;
+            for (int i = 0; i < amostra.Length; i++) {
+                soma += amostra[i] * pesos[i];
+            }
+            soma += bias * pesos[pesos.Length - 1];
+            return soma;
+        }
+        void corrigirPesos(int[] amostra, int saidaE, int saidaC) { 
+            for (int i = 0;i<amostra.Length;i++)
+            {
+                pesos[i] = pesos[i] + (tda * (saidaC - saidaE) * amostra[i]);
+            }
+            pesos[amostra.Length] = pesos[amostra.Length] + (tda * (saidaC - saidaE) * bias);
+        }
+        public void train(int[][] amostras, int[] saidas) {
+            double soma = 0.0;
+            int saida;
+            for (double i = 0;i < epocas;)
+            {
+                for (int k = 0; k < amostras.Length; k++) {
+                    soma = somar(amostras[k]);
+                    saida = verify(soma);
+                    if (saida != saidas[k]) {
+                        corrigirPesos(amostras[k], saida, saidas[k]);
+                    }
+                    i += 1.0 / (double)amostras.Length;
+                }
+            }
+
         }
         public int predict(int[] entrada) {
             double soma = 0.0;
