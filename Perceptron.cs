@@ -23,9 +23,8 @@ namespace Perceptron
             this.bias = bias;
             Random rd = new Random(Guid.NewGuid().GetHashCode());
             for( int i = 0; i < pesos.Length; i++ ) {
-                pesos[i] = Math.Round(rd.NextDouble(),2);
+                pesos[i] = rd.NextDouble();
                 bits[i] = 0;
-                Console.WriteLine(pesos[i]);
             }
             bits[entradas] = bias;
         }
@@ -67,7 +66,7 @@ namespace Perceptron
                     {
                         for (int k = 0; k < pesos.Length; k++)
                         {
-                            pesos[k] = Math.Round(pesos[k] + (tda * (tt[i % var] - saida[i % var]) * bits[k]),2);
+                            pesos[k] = pesos[k] + (tda * (tt[i % var] - saida[i % var]) * bits[k]);
                             ///Console.WriteLine("Alterado");
                         }
                     }
@@ -79,31 +78,31 @@ namespace Perceptron
         double somar(int[] bin) {
             double soma = 0.0;
             for (int i = 0; i < bin.Length; i++) {
-                soma += Math.Round(pesos[i] * bin[i], 2);
+                soma += pesos[i] * bin[i];
             }
             return soma;
         }
         int verify(double soma) {
-            return (soma > 0 ? 1 : -1);
+            return (soma > 0 ? 1 : 0);
         }
-        public void train(int[] tt) {
+        public void rec_train(int[] tt) {
             bool erro = false;
             int saida = 0;
             int var = tt.Length;
             for (int i = 0; i < tt.Length; i++) {
-                saida = verify(somar(toBin(i)));
+                bits = toBin(i);
+                saida = verify(somar(bits));
                 if (saida != tt[i]) {
                     erro = true;
                     for (int k = 0; k < pesos.Length; k++)
                     {
-                        pesos[k] = Math.Round(pesos[k] + (tda * (tt[i % var] - saida) * bits[k]), 2);
-                        ///Console.WriteLine("Alterado");
+                        pesos[k] = pesos[k] + (tda * (tt[i % var] - saida) * bits[k]);
                     }
                 }
             }
-            if (erro) { train(tt);}
+            if (erro) { rec_train(tt);}
         }
-        public void itrain(int[] tt) {
+        public void i_train(int[] tt) {
             bool erro = false;
             int saida = 0;
             int var = tt.Length;
@@ -111,37 +110,35 @@ namespace Perceptron
             do {
                 erro = false;
                 for (int i = 0; i < tt.Length; i++) {
-                    soma = Math.Round(somar(toBin(i)),2);
-                    Console.WriteLine("soma = "+soma);
-                    saida = verify(soma);
+                    bits = toBin(i);
+                    saida = verify(somar(bits));
                     if (saida != tt[i]) {
                         erro = true;
                         for (int k = 0; k < pesos.Length; k++)
                         {
-                            pesos[k] = Math.Round(pesos[k] + (tda * (tt[i % var] - saida) * bits[k]), 3);
+                            pesos[k] = pesos[k] + (tda * (tt[i % var] - saida) * bits[k]);
                             ///Console.WriteLine("Alterado");
                         }
                     }
                 }
             } while (erro == true);
         }
-        public void itrain_epoch(int[] tt)
+        public void i_train_epoch(int[] tt)
         {
-            bool erro = false;
             int qtde = (int)(Math.Pow(2, entradas) * epocas);
             int saida = 0;
             int var = tt.Length;
             double soma = 0.0;
                 for (int i = 0; i < qtde; i++)
                 {
-                soma = somar(toBin(i % var));
-                    saida = verify(soma);
+                bits = toBin(i % var);
+                soma = somar(bits);
+                saida = verify(soma);
                     if (saida != tt[i%var])
                     {
-                        erro = true;
                         for (int k = 0; k < pesos.Length; k++)
                         {
-                            pesos[k] = Math.Round(pesos[k] + (tda * (tt[i % var] - saida) * bits[k]), 3);
+                            pesos[k] = pesos[k] + (tda * (tt[i % var] - saida) * bits[k]);
                             ///Console.WriteLine("Alterado");
                         }
                     }
